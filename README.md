@@ -6,6 +6,7 @@ cd arxiv-archive
 ```
 
 **2. set your paths**
+Create a .env file in the root directory with the following variables:
 ```
 DB_PATH=path/to/your/database.db
 JSON_PATH=path/to/your/metadata.json

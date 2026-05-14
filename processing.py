@@ -1,13 +1,12 @@
 import logging  
-import duckdb
 import arxiv
 import time
 from datetime import datetime, timedelta, timezone
 import pandas as pd
 import pandera.pandas as pa
 from pandera.typing import DataFrame, Series
-from categories import CATEGORY_MAP
-from database import con
+from taxonomy import TAXONOMY_MAP
+from connector import con
 from config import Config
 
 
@@ -121,8 +120,8 @@ def check_duplicates(table: str):
     return duplicates_df
 
 
-def get_paper(id: str) -> str:
-    string = id.strip()
+def get_paper(filter: str) -> DataFrame:
+    string = filter.strip()
     if " " in string:
         string = string.replace(" ", "_")
     search_term = f"%{string}%"
@@ -138,6 +137,32 @@ def get_paper(id: str) -> str:
     print(result)
 
 
+def get_count_by(category: str = None,
+                 author: str = None,
+                 year: str = None) -> DataFrame | int:
+    # categories are often populated with several categories
+    # -> must split strings in categories before execution
+
+    if category is not None and not isinstance(category, list):
+        logging.error(f"request sent with wrong type {type(category)}. List is expected")
+        raise ValueError("Parameter 'category' must be a list")
+    
+    if category:
+        query = f"""
+                WITH split_data AS (
+                    SELECT unnest(string_split(categories, ' ')) AS sub_cat
+                    FROM {Config.TABLE_MAIN}
+                )
+                SELECT count(*) AS count, sub_cat AS sub_category
+                FROM split_data
+                WHERE sub_cat IN ({','.join(['?' for _ in category])})
+                GROUP BY sub_cat
+                """
+        sub_cat_df = con.execute(query, category).df()
+        return sub_cat_df
+
+
+
 class ArxivSchema(pa.DataFrameModel):
     id: Series[str] = pa.Field(unique=True, nullable=False)
     update_date: Series[pd.Timestamp] = pa.Field(coerce=True)
@@ -149,8 +174,10 @@ def validate_data(df: DataFrame[ArxivSchema]):
     print("Data is valid. Proceeding...")
     return df
 
-# todo, function for nightly fetching data
-# todo, function for data validation for newly fetched data
-
-
+# todo: function for nightly fetching data
+# todo: function / architecture for data validation for newly fetched data
+# todo: check if a new category is found -> check regularely
+    # 1) if current papers all represented by maintained taxonomy
+    # 2) if new paper has a known category in TABLE_MAIN
+# provide a docker
 
