@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 import pandas as pd
 import pandera.pandas as pa
 from pandera.typing import DataFrame, Series
-from taxonomy import TAXONOMY_MAP
+from taxonomy import TAXONOMY_MAP, humanize_categories
 from connector import con
 from config import Config
 
@@ -28,35 +28,17 @@ def bulk_load():
 def create_audit_table() -> None:
     con.execute(f"""
         CREATE TABLE IF NOT EXISTS {Config.TABLE_AUDIT} (
-        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        event_type VARCHAR,
-        row_count INTEGER,
-        message VARCHAR
-        )""")
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            event_type VARCHAR,
+            row_count INTEGER,
+            message VARCHAR
+            )
+        """
+    )
 
 
 def print_table_info(table: str):
     print(con.execute(f"PRAGMA table_info('{table}')").df())
-
-
-def merge_categories():
-    col = "categories"
-
-    for cat in CATEGORY_MAP:
-      
-        query = f"""
-                SELECT 
-                {col}, 
-                COUNT(*) AS num 
-                FROM {TABLE} 
-                WHERE {col} IS NOT NULL
-                AND {col} LIKE '{cat}.%'
-                GROUP BY {col}
-                ORDER BY num DESC
-                """
-        var = dict(con.execute(query).fetchall())
-        var = sum(var.values())
-        print(f"category: {cat}: num {var}")
 
 
 def migrate_temp_table():
@@ -109,18 +91,17 @@ def migrate_temp_table():
         print("Migration aborted due to bad data.")
 
 
-def check_duplicates(table: str):
-    duplicate_query = f"""
-                        SELECT id, COUNT(*) 
-                        FROM {table} 
-                        GROUP BY id 
-                        HAVING COUNT(*) > 1
-                        """
-    duplicates_df = con.execute(duplicate_query).df()
-    return duplicates_df
+def check_duplicates(table_name: str) -> DataFrame:
+    query = f"""
+            SELECT id, count(*) 
+            FROM {table_name} 
+            GROUP BY id 
+            HAVING COUNT(*) > 1;
+    """
+    return con.execute(query).df()
 
 
-def get_paper(filter: str) -> DataFrame:
+def get_paper_by(filter: str) -> DataFrame:
     string = filter.strip()
     if " " in string:
         string = string.replace(" ", "_")
@@ -140,13 +121,14 @@ def get_paper(filter: str) -> DataFrame:
 def get_count_by(category: str = None,
                  author: str = None,
                  year: str = None) -> DataFrame | int:
-    # categories are often populated with several categories
-    # -> must split strings in categories before execution
 
     if category is not None and not isinstance(category, list):
         logging.error(f"request sent with wrong type {type(category)}. List is expected")
         raise ValueError("Parameter 'category' must be a list")
     
+    # categories are often populated with several categories
+    # -> must split strings in categories before execution
+
     if category:
         query = f"""
                 WITH split_data AS (
@@ -158,9 +140,15 @@ def get_count_by(category: str = None,
                 WHERE sub_cat IN ({','.join(['?' for _ in category])})
                 GROUP BY sub_cat
                 """
-        sub_cat_df = con.execute(query, category).df()
-        return sub_cat_df
+        df = con.execute(query, category).df()
+        humanized_df = humanize_categories(df, category)
+        return humanized_df
 
+
+def translate_ids(df: DataFrame) -> DataFrame:
+    
+    print(df)
+    return df
 
 
 class ArxivSchema(pa.DataFrameModel):
@@ -180,4 +168,3 @@ def validate_data(df: DataFrame[ArxivSchema]):
     # 1) if current papers all represented by maintained taxonomy
     # 2) if new paper has a known category in TABLE_MAIN
 # provide a docker
-

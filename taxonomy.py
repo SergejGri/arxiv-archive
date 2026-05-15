@@ -1,5 +1,6 @@
 import pandera.pandas as pa
 from pandera.typing import DataFrame, Series
+import pandas as pd
 
 ECONOMICS = {
     "econ.EM": "Econometrics",
@@ -197,7 +198,7 @@ PHYSICS = {
 }
 
 
-CATEGORIES = {
+CATEGORIES_DICT = {
     **ECONOMICS,
     **COMPUTER_SCIENCE,
     **ELECTRICAL_ENGINEERING,
@@ -223,6 +224,19 @@ def get_main_categories():
     return list(TAXONOMY_MAP.keys())
 
 
-def humanize_id(df: DataFrame) -> DataFrame:
 
-    return df
+def humanize_categories():
+    rows = []
+    for main_cat, sub_dict in TAXONOMY_MAP.items():
+        for acro, readable_name in sub_dict.items():
+            row = {
+                "main_category": main_cat,
+                "readable_name": readable_name,
+                "acro": acro
+            }
+            rows.append(row)
+    return pd.DataFrame(rows)
+    
+
+
+

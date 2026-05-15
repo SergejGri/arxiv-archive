@@ -6,5 +6,6 @@ if __name__ == "__main__":
    #print(check_duplicates(table=TABLE))
    #print_table_info()
    #print(con.execute(query).df())
-   get_paper("peter higgs")
+   get_paper_by("peter higgs")
+   
 
