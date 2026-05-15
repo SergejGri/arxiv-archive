@@ -1,21 +1,13 @@
-from dataclasses import dataclass 
-
-
-CATEGORY_MAP = {
-    "cs": "Computer Science",
-    "math": "Mathematics",
-    "stat": "Statistics",
-    "eess": "Electrical Engineering",
-    "q-bio": "Quantetive Biology",
-    "q-fin": "Quantetive Finance",
-    "econ": "Economics"
-}
+import pandera.pandas as pa
+from pandera.typing import DataFrame, Series
+import pandas as pd
 
 ECONOMICS = {
     "econ.EM": "Econometrics",
     "econ.GN": "General Economics",
     "econ.TH": "Theoretical Economics"
 }
+
 
 COMPUTER_SCIENCE = {
     "cs.AI": "Artificial Intelligence",
@@ -59,12 +51,14 @@ COMPUTER_SCIENCE = {
     "cs.SY": "Systems and Control"
 }
 
+
 ELECTRICAL_ENGINEERING = {
     "eess.AS": "Audio and Speech Processing",
     "eess.IV": "Image and Video Processing",
     "eess.SP": "Signal Processing",
     "eess.SY": "Systems and Control"
 }
+
 
 MATHEMATICS = {
     "math.AG": "Algebraic Geometry",
@@ -101,21 +95,6 @@ MATHEMATICS = {
     "math.SG": "Symplectic Geometry"
 }
 
-PHYSICS = {
-    "astro-ph": "Astrophysics",
-    "cond-mat": "Condensed Matter",
-    "gr-qc": "General Relativity and Quantum Cosmology",
-    "hep-ex": "High Energy Physics - Experiment",
-    "hep-lat": "High Energy Physics - Lattice",
-    "hep-ph": "High Energy Physics - Phenomenology",
-    "hep-th": "High Energy Physics - Theory",
-    "math-ph": "Mathematical Physics",
-    "nlin": "Nonlinear Sciences",
-    "nucl-ex": "Nuclear Experiment",
-    "nucl-th": "Nuclear Theory",
-    "physics": "Physics",
-    "quant-ph": "Quantum Physics"
-}
 
 QUANTITATIVE_BIOLOGY = {
     "q-bio.BM": "Biomolecules",
@@ -130,6 +109,7 @@ QUANTITATIVE_BIOLOGY = {
     "q-bio.TO": "Tissues and Organs"
 }
 
+
 QUANTITATIVE_FINANCE = {
     "q-fin.CP": "Computational Finance",
     "q-fin.EC": "Economics",
@@ -142,6 +122,7 @@ QUANTITATIVE_FINANCE = {
     "q-fin.TR": "Trading and Market Microstructure"
 }
 
+
 STATISTICS = {
     "stat.AP": "Applications",
     "stat.CO": "Computation",
@@ -152,13 +133,110 @@ STATISTICS = {
 }
 
 
-def print_map():
-    CATEGORY_MAP = {"ECO": ECONOMICS}
-    for key, value in CATEGORY_MAP.items():
-        for i in value.items():
-            print(f"key: {key} value: {i} \n")
+ASTRO_PHYSICS = {
+    "astro-ph.CO": "Cosmology and Nongalactic Astrophysics",
+    "astro-ph.EP": "Earth and Planetary Astrophysics",
+    "astro-ph.GA": "Astrophysics of Galaxies",
+    "astro-ph.HE": "High Energy Astrophysical Phenomena",
+    "astro-ph.IM": "Instrumentation and Methods for Astrophysics",
+    "astro-ph.SR": "Solar and Stellar Astrophysics"
+}
+
+CONDENSED_MATTER = {
+    "cond-mat.dis-nn": "Disordered Systems and Neural Networks",
+    "cond-mat.mes-hall": "Mesoscale and Nanoscale Physics",
+    "cond-mat.mtrl-sci": "Materials Science",
+    "cond-mat.other": "Other Condensed Matter",
+    "cond-mat.quant-gas": "Quantum Gases",
+    "cond-mat.soft": "Soft Condensed Matter",
+    "cond-mat.stat-mech": "Statistical Mechanics",
+    "cond-mat.str-el": "Strongly Correlated Electrons",
+    "cond-mat.supr-con": "Superconductivity"
+}
+
+GENERAL_PHYSICS = {
+    "physics.acc-ph": "Accelerator Physics",
+    "physics.ao-ph": "Atmospheric and Oceanic Physics",
+    "physics.app-ph": "Applied Physics",
+    "physics.atm-clus": "Atomic and Molecular Clusters",
+    "physics.bio-ph": "Biological Physics",
+    "physics.chem-ph": "Chemical Physics",
+    "physics.class-ph": "Classical Physics",
+    "physics.comp-ph": "Computational Physics",
+    "physics.data-an": "Data Analysis, Statistics and Probability",
+    "physics.flu-dyn": "Fluid Dynamics",
+    "physics.gen-ph": "General Physics",
+    "physics.geo-ph": "Geophysics",
+    "physics.hist-ph": "History and Philosophy of Physics",
+    "physics.ins-det": "Instrumentation and Detectors",
+    "physics.med-ph": "Medical Physics",
+    "physics.optics": "Optics",
+    "physics.ed-ph": "Physics Education",
+    "physics.soc-ph": "Physics and Society",
+    "physics.plasma-ph": "Plasma Physics",
+    "physics.pop-ph": "Popular Physics",
+    "physics.space-ph": "Space Physics"
+}
+
+HIGH_ENERGY_AND_NUCLEAR = {
+    "gr-qc": "General Relativity and Quantum Cosmology",
+    "hep-ex": "High Energy Physics - Experiment",
+    "hep-lat": "High Energy Physics - Lattice",
+    "hep-ph": "High Energy Physics - Phenomenology",
+    "hep-th": "High Energy Physics - Theory",
+    "nucl-ex": "Nuclear Experiment",
+    "nucl-th": "Nuclear Theory",
+    "quant-ph": "Quantum Physics",
+    "math-ph": "Mathematical Physics"
+}
+
+PHYSICS = {
+    **ASTRO_PHYSICS,
+    **CONDENSED_MATTER,
+    **GENERAL_PHYSICS,
+    **HIGH_ENERGY_AND_NUCLEAR
+}
 
 
-# for key, value in user_data.items():
-#    print(f"{key}: {value}")
+CATEGORIES_DICT = {
+    **ECONOMICS,
+    **COMPUTER_SCIENCE,
+    **ELECTRICAL_ENGINEERING,
+    **MATHEMATICS,
+    **QUANTITATIVE_BIOLOGY,
+    **QUANTITATIVE_FINANCE,
+    **STATISTICS,
+    **PHYSICS
+}
+
+TAXONOMY_MAP = {
+    "computer science": COMPUTER_SCIENCE,
+    "economics": ECONOMICS,
+    "electrical engineering": ELECTRICAL_ENGINEERING,
+    "mathematics": MATHEMATICS,
+    "physics": PHYSICS,
+    "quantitative biology": QUANTITATIVE_BIOLOGY,
+    "quantitative finance": QUANTITATIVE_FINANCE,
+    "statistics": STATISTICS
+}
+
+def get_main_categories():
+    return list(TAXONOMY_MAP.keys())
+
+
+
+def humanize_categories():
+    rows = []
+    for main_cat, sub_dict in TAXONOMY_MAP.items():
+        for acro, readable_name in sub_dict.items():
+            row = {
+                "main_category": main_cat,
+                "readable_name": readable_name,
+                "acro": acro
+            }
+            rows.append(row)
+    return pd.DataFrame(rows)
+    
+
+
 
