@@ -1,11 +1,9 @@
-import pandera.pandas as pa
-from pandera.typing import DataFrame, Series
 import pandas as pd
 
 ECONOMICS = {
     "econ.EM": "Econometrics",
     "econ.GN": "General Economics",
-    "econ.TH": "Theoretical Economics"
+    "econ.TH": "Theoretical Economics",
 }
 
 
@@ -48,7 +46,7 @@ COMPUTER_SCIENCE = {
     "cs.SD": "Sound - Audio and Speech Processing",
     "cs.SE": "Software Engineering",
     "cs.SI": "Social and Information Networks",
-    "cs.SY": "Systems and Control"
+    "cs.SY": "Systems and Control",
 }
 
 
@@ -56,7 +54,7 @@ ELECTRICAL_ENGINEERING = {
     "eess.AS": "Audio and Speech Processing",
     "eess.IV": "Image and Video Processing",
     "eess.SP": "Signal Processing",
-    "eess.SY": "Systems and Control"
+    "eess.SY": "Systems and Control",
 }
 
 
@@ -92,7 +90,7 @@ MATHEMATICS = {
     "math.RA": "Rings and Algebras",
     "math.SP": "Spectral Theory",
     "math.ST": "Statistics Theory",
-    "math.SG": "Symplectic Geometry"
+    "math.SG": "Symplectic Geometry",
 }
 
 
@@ -106,7 +104,7 @@ QUANTITATIVE_BIOLOGY = {
     "q-bio.PE": "Populations and Evolution",
     "q-bio.QM": "Quantitative Methods",
     "q-bio.SC": "Subcellular Processes",
-    "q-bio.TO": "Tissues and Organs"
+    "q-bio.TO": "Tissues and Organs",
 }
 
 
@@ -119,7 +117,7 @@ QUANTITATIVE_FINANCE = {
     "q-fin.PR": "Pricing of Securities",
     "q-fin.RM": "Risk Management",
     "q-fin.ST": "Statistical Finance",
-    "q-fin.TR": "Trading and Market Microstructure"
+    "q-fin.TR": "Trading and Market Microstructure",
 }
 
 
@@ -129,7 +127,7 @@ STATISTICS = {
     "stat.ME": "Methodology",
     "stat.ML": "Machine Learning",
     "stat.OT": "Other Statistics",
-    "stat.TH": "Statistics Theory"
+    "stat.TH": "Statistics Theory",
 }
 
 
@@ -139,7 +137,7 @@ ASTRO_PHYSICS = {
     "astro-ph.GA": "Astrophysics of Galaxies",
     "astro-ph.HE": "High Energy Astrophysical Phenomena",
     "astro-ph.IM": "Instrumentation and Methods for Astrophysics",
-    "astro-ph.SR": "Solar and Stellar Astrophysics"
+    "astro-ph.SR": "Solar and Stellar Astrophysics",
 }
 
 CONDENSED_MATTER = {
@@ -151,7 +149,7 @@ CONDENSED_MATTER = {
     "cond-mat.soft": "Soft Condensed Matter",
     "cond-mat.stat-mech": "Statistical Mechanics",
     "cond-mat.str-el": "Strongly Correlated Electrons",
-    "cond-mat.supr-con": "Superconductivity"
+    "cond-mat.supr-con": "Superconductivity",
 }
 
 GENERAL_PHYSICS = {
@@ -175,7 +173,7 @@ GENERAL_PHYSICS = {
     "physics.soc-ph": "Physics and Society",
     "physics.plasma-ph": "Plasma Physics",
     "physics.pop-ph": "Popular Physics",
-    "physics.space-ph": "Space Physics"
+    "physics.space-ph": "Space Physics",
 }
 
 HIGH_ENERGY_AND_NUCLEAR = {
@@ -187,14 +185,14 @@ HIGH_ENERGY_AND_NUCLEAR = {
     "nucl-ex": "Nuclear Experiment",
     "nucl-th": "Nuclear Theory",
     "quant-ph": "Quantum Physics",
-    "math-ph": "Mathematical Physics"
+    "math-ph": "Mathematical Physics",
 }
 
 PHYSICS = {
     **ASTRO_PHYSICS,
     **CONDENSED_MATTER,
     **GENERAL_PHYSICS,
-    **HIGH_ENERGY_AND_NUCLEAR
+    **HIGH_ENERGY_AND_NUCLEAR,
 }
 
 
@@ -206,7 +204,7 @@ CATEGORIES_DICT = {
     **QUANTITATIVE_BIOLOGY,
     **QUANTITATIVE_FINANCE,
     **STATISTICS,
-    **PHYSICS
+    **PHYSICS,
 }
 
 TAXONOMY_MAP = {
@@ -217,12 +215,12 @@ TAXONOMY_MAP = {
     "physics": PHYSICS,
     "quantitative biology": QUANTITATIVE_BIOLOGY,
     "quantitative finance": QUANTITATIVE_FINANCE,
-    "statistics": STATISTICS
+    "statistics": STATISTICS,
 }
+
 
 def get_main_categories():
     return list(TAXONOMY_MAP.keys())
-
 
 
 def humanize_categories():
@@ -232,11 +230,7 @@ def humanize_categories():
             row = {
                 "main_category": main_cat,
                 "readable_name": readable_name,
-                "acro": acro
+                "acro": acro,
             }
             rows.append(row)
     return pd.DataFrame(rows)
-    
-
-
-

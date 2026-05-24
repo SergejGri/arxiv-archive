@@ -1,11 +1,9 @@
-from processing import *
-
+from connector import close_connection
+from plots import plot_single_category
 
 if __name__ == "__main__":
-   #migrate_temp_table()
-   #print(check_duplicates(table=TABLE))
-   #print_table_info()
-   #print(con.execute(query).df())
-   get_paper_by("peter higgs")
-   
+    try:
+        plot_single_category(category="physics")
 
+    finally:
+        close_connection()
