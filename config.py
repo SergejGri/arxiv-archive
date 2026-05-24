@@ -1,10 +1,14 @@
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv()
 
+
 class Config:
-    DB_PATH = os.getenv("DB_PATH")
-    TABLE_MAIN = os.getenv("TABLE_MAIN")
-    TABLE_TEMP = os.getenv("TABLE_TEMP")
-    JSON_PATH = os.getenv("JSON_PATH")
+    DB_PATH = os.environ["DB_PATH"]
+    TABLE_MAIN = os.environ["TABLE_MAIN"]
+    TABLE_TEMP = os.environ["TABLE_TEMP"]
+    TABLE_AUDIT = os.environ["TABLE_AUDIT"]
+    JSON_PATH = os.environ["JSON_PATH"]
+    BASE_URL = os.environ["BASE_URL"]
