@@ -4,4 +4,9 @@ __pycache__/
 *.db
 *.log
 *.json
-plots/
+plots/arxiv-metadata-oai-snapshot.json
+*.db
+*.db.wal
+.env
+.venv/
+output/

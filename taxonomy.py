@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 import pandas as pd
 
 ECONOMICS = {
@@ -35,6 +37,7 @@ COMPUTER_SCIENCE = {
     "cs.MA": "Multiagent Systems",
     "cs.MM": "Multimedia",
     "cs.MS": "Mathematical Software",
+    "cs.NA": "Numerical Analysis",
     "cs.NE": "Neural and Evolutionary Computing",
     "cs.NI": "Networking and Internet Architecture",
     "cs.OH": "Other Computer Science",
@@ -131,6 +134,15 @@ STATISTICS = {
 }
 
 
+NONLINEAR_SCIENCES = {
+    "nlin.AO": "Adaptation and Self-Organizing Systems",
+    "nlin.CG": "Cellular Automata and Lattice Gases",
+    "nlin.CD": "Chaotic Dynamics",
+    "nlin.SI": "Exactly Solvable and Integrable Systems",
+    "nlin.PS": "Pattern Formation and Solitons",
+}
+
+
 ASTRO_PHYSICS = {
     "astro-ph.CO": "Cosmology and Nongalactic Astrophysics",
     "astro-ph.EP": "Earth and Planetary Astrophysics",
@@ -157,6 +169,7 @@ GENERAL_PHYSICS = {
     "physics.ao-ph": "Atmospheric and Oceanic Physics",
     "physics.app-ph": "Applied Physics",
     "physics.atm-clus": "Atomic and Molecular Clusters",
+    "physics.atom-ph": "Atomic Physics",
     "physics.bio-ph": "Biological Physics",
     "physics.chem-ph": "Chemical Physics",
     "physics.class-ph": "Classical Physics",
@@ -196,15 +209,72 @@ PHYSICS = {
 }
 
 
+# Retired archive names still present on pre-2007 papers in the snapshot.
+# Without these, an inner join against the taxonomy silently drops them.
+LEGACY = {
+    "acc-phys": "Accelerator Physics",
+    "adap-org": "Adaptation and Self-Organizing Systems",
+    "alg-geom": "Algebraic Geometry",
+    "ao-sci": "Atmospheric-Oceanic Sciences",
+    "atom-ph": "Atomic Physics",
+    "bayes-an": "Bayesian Analysis",
+    "chao-dyn": "Chaotic Dynamics",
+    "chem-ph": "Chemical Physics",
+    "cmp-lg": "Computation and Language",
+    "comp-gas": "Cellular Automata and Lattice Gases",
+    "dg-ga": "Differential Geometry",
+    "funct-an": "Functional Analysis",
+    "mtrl-th": "Materials Theory",
+    "patt-sol": "Pattern Formation and Solitons",
+    "plasm-ph": "Plasma Physics",
+    "q-alg": "Quantum Algebra",
+    "solv-int": "Exactly Solvable and Integrable Systems",
+    "supr-con": "Superconductivity",
+}
+
+# Pairs arXiv treats as the same category under two names, plus legacy
+# redirects. Group by the canonical code or a cross-listed paper is counted
+# twice.
+ALIASES = {
+    "cs.IT": "math.IT",
+    "cs.LG": "stat.ML",
+    "cs.NA": "math.NA",
+    "cs.SY": "eess.SY",
+    "econ.GN": "q-fin.EC",
+    "math.MP": "math-ph",
+    "stat.TH": "math.ST",
+    "acc-phys": "physics.acc-ph",
+    "adap-org": "nlin.AO",
+    "alg-geom": "math.AG",
+    "ao-sci": "physics.ao-ph",
+    "atom-ph": "physics.atom-ph",
+    "bayes-an": "physics.data-an",
+    "chao-dyn": "nlin.CD",
+    "chem-ph": "physics.chem-ph",
+    "cmp-lg": "cs.CL",
+    "comp-gas": "nlin.CG",
+    "dg-ga": "math.DG",
+    "funct-an": "math.FA",
+    "mtrl-th": "cond-mat.mtrl-sci",
+    "patt-sol": "nlin.PS",
+    "plasm-ph": "physics.plasma-ph",
+    "q-alg": "math.QA",
+    "solv-int": "nlin.SI",
+    "supr-con": "cond-mat.supr-con",
+}
+
+
 CATEGORIES_DICT = {
     **ECONOMICS,
     **COMPUTER_SCIENCE,
     **ELECTRICAL_ENGINEERING,
     **MATHEMATICS,
+    **NONLINEAR_SCIENCES,
     **QUANTITATIVE_BIOLOGY,
     **QUANTITATIVE_FINANCE,
     **STATISTICS,
     **PHYSICS,
+    **LEGACY,
 }
 
 TAXONOMY_MAP = {
@@ -212,10 +282,12 @@ TAXONOMY_MAP = {
     "economics": ECONOMICS,
     "electrical engineering": ELECTRICAL_ENGINEERING,
     "mathematics": MATHEMATICS,
+    "nonlinear sciences": NONLINEAR_SCIENCES,
     "physics": PHYSICS,
     "quantitative biology": QUANTITATIVE_BIOLOGY,
     "quantitative finance": QUANTITATIVE_FINANCE,
     "statistics": STATISTICS,
+    "legacy": LEGACY,
 }
 
 
@@ -223,14 +295,26 @@ def get_main_categories():
     return list(TAXONOMY_MAP.keys())
 
 
-def humanize_categories():
-    rows = []
-    for main_cat, sub_dict in TAXONOMY_MAP.items():
-        for acro, readable_name in sub_dict.items():
-            row = {
-                "main_category": main_cat,
-                "readable_name": readable_name,
-                "acro": acro,
-            }
-            rows.append(row)
+@lru_cache(maxsize=1)
+def humanize_categories() -> pd.DataFrame:
+    """One row per arXiv category code.
+
+    Cached: this is a static lookup, there is no reason to rebuild it on
+    every call.
+
+    canonical_acro collapses arXiv's alias pairs (cs.LG / stat.ML and
+    friends). Group on it when counting papers, or cross-listed papers get
+    counted once per alias.
+    """
+    rows = [
+        {
+            "main_category": main_cat,
+            "readable_name": readable_name,
+            "acro": acro,
+            "canonical_acro": ALIASES.get(acro, acro),
+            "is_legacy": main_cat == "legacy",
+        }
+        for main_cat, sub_dict in TAXONOMY_MAP.items()
+        for acro, readable_name in sub_dict.items()
+    ]
     return pd.DataFrame(rows)
