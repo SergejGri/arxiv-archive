@@ -1,0 +1,7 @@
+# Slim set for the read-only dashboard container: no arxiv, no matplotlib,
+# no pandera. Keeps the image small and the write path out of the reader.
+duckdb>=1.5
+pandas>=2.2
+python-dotenv>=1.0
+fastapi>=0.115
+uvicorn[standard]>=0.30

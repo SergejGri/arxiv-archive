@@ -45,10 +45,10 @@ COLUMNS = [
 ]
 
 
+
 # --------------------------------------------------------------------------
 # schema
 # --------------------------------------------------------------------------
-
 
 def create_table(kind: str = "main") -> None:
     """Create one of the archive's tables if it does not already exist."""
@@ -101,6 +101,7 @@ def audit(event_type: str, row_count: int = 0, message: str = "") -> None:
     )
 
 
+
 # --------------------------------------------------------------------------
 # bulk load
 # --------------------------------------------------------------------------
@@ -109,7 +110,6 @@ def audit(event_type: str, row_count: int = 0, message: str = "") -> None:
 # "Mon, 2 Apr 2007 19:18:42 GMT". update_date is the LAST touch, not the
 # submission, so "papers per year" needs this field.
 _CREATED_FORMAT = "%a, %-d %b %Y %H:%M:%S GMT"
-
 
 def bulk_load(json_path: str | None = None, limit: int | None = None) -> int:
     """Load the JSON snapshot into the staging table.
@@ -153,10 +153,10 @@ def bulk_load(json_path: str | None = None, limit: int | None = None) -> int:
     return rows
 
 
+
 # --------------------------------------------------------------------------
 # validation
 # --------------------------------------------------------------------------
-
 
 class ArxivSchema(pa.DataFrameModel):
     id: Series[str] = pa.Field(unique=True, nullable=False)
@@ -173,13 +173,7 @@ def validate_sample(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def validate_in_db(table: str) -> None:
-    """Run the not-null and uniqueness checks in SQL.
-
-    The previous version pulled the entire staging table into pandas before
-    validating. At 2.8M rows with abstracts that is 10+ GB of RAM and the
-    process gets OOM-killed on a laptop. DuckDB does the same checks over
-    the column store without materialising anything.
-    """
+    """Run the not-null and uniqueness checks in SQL."""
     problems = con.execute(f"""
         SELECT
             count(*) FILTER (WHERE id IS NULL)         AS null_id,
@@ -196,16 +190,15 @@ def validate_in_db(table: str) -> None:
         log.warning("%s duplicate ids in %s; newest revision wins.",
                     f"{failed['duplicate_ids']:,}", table)
 
-    # Cheap belt-and-braces pandera pass on a sample.
     sample = con.execute(f"SELECT * FROM {table} USING SAMPLE 5000 ROWS").df()
     validate_sample(sample)
     log.info("Validation passed for %s.", table)
 
 
+
 # --------------------------------------------------------------------------
 # migration
 # --------------------------------------------------------------------------
-
 
 def migrate_temp_table(drop_temp: bool = True) -> int:
     """Upsert the staging table into the main table."""
@@ -283,7 +276,7 @@ def rebuild_category_index() -> int:
 
 
 # --------------------------------------------------------------------------
-# queries
+# maintenance helpers
 # --------------------------------------------------------------------------
 
 
@@ -296,72 +289,6 @@ def check_duplicates(table_name: str) -> pd.DataFrame:
         SELECT id, count(*) AS n FROM {table_name}
         GROUP BY id HAVING count(*) > 1 ORDER BY n DESC
     """).df()
-
-
-def get_count_single_cat(acro: str) -> int:
-    """Papers carrying `acro`, primary or cross-listed."""
-    return con.execute(
-        f"SELECT count(DISTINCT id) FROM {Config.TABLE_CATEGORIES} WHERE acro = ?",
-        [acro],
-    ).fetchone()[0]
-
-
-def get_count_by_subcategory(category: str) -> pd.DataFrame:
-    """Per-subcategory counts for one main category, as a DataFrame.
-
-    One grouped query rather than a Python loop issuing a query per
-    subcategory.
-    """
-    return con.execute(
-        f"""
-        SELECT acro          AS sub_category,
-               readable_name,
-               count(DISTINCT id) AS count
-        FROM {Config.TABLE_CATEGORIES}
-        WHERE main_category = ?
-        GROUP BY acro, readable_name
-        ORDER BY count DESC
-        """,
-        [category.lower()],
-    ).df()
-
-
-def get_papers_per_year(main_category: str | None = None) -> pd.DataFrame:
-    """Submissions per year, using the real submission date."""
-    if main_category:
-        return con.execute(
-            f"""
-            SELECT year(p.submitted_date) AS year, count(DISTINCT p.id) AS count
-            FROM {Config.TABLE_MAIN} p
-            JOIN {Config.TABLE_CATEGORIES} c ON c.id = p.id
-            WHERE c.main_category = ? AND p.submitted_date IS NOT NULL
-            GROUP BY year ORDER BY year
-            """,
-            [main_category.lower()],
-        ).df()
-    return con.execute(f"""
-        SELECT year(submitted_date) AS year, count(*) AS count
-        FROM {Config.TABLE_MAIN} WHERE submitted_date IS NOT NULL
-        GROUP BY year ORDER BY year
-    """).df()
-
-
-def search_papers(term: str, limit: int = 100) -> pd.DataFrame:
-    """Full-text-ish search over title and abstract.
-
-    The old version replaced spaces with underscores before building the
-    LIKE pattern, which meant any multi-word search matched nothing.
-    """
-    pattern = f"%{term.strip()}%"
-    return con.execute(
-        f"""
-        SELECT id, title, categories, submitted_date, update_date
-        FROM {Config.TABLE_MAIN}
-        WHERE title ILIKE ? OR abstract ILIKE ?
-        ORDER BY update_date DESC LIMIT ?
-        """,
-        [pattern, pattern, limit],
-    ).df()
 
 
 # --------------------------------------------------------------------------

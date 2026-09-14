@@ -1,8 +1,8 @@
 """DuckDB connection management.
 
-A DuckDB file allows exactly ONE read-write process at a time. Readers (the web
-app) must open with read_only=True, or they will fail to start while the writer
-(the weekly fetch job) holds the lock.
+A duckdb file allows only one read/write process in parallel.
+Readers must open with read_only=True, or they will fail to start while the writer
+(e.g. the weekly fetch job) holds the lock.
 """
 
 import logging

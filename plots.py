@@ -1,4 +1,4 @@
-"""Static plots. Nothing here runs on import."""
+"""Static plots for reference and visual analysis."""
 
 import logging
 from pathlib import Path
@@ -9,7 +9,7 @@ matplotlib.use("Agg")  # no GUI backend needed for writing files
 import matplotlib.pyplot as plt
 
 from config import Config
-from processing import get_count_by_subcategory, get_papers_per_year
+from queries import get_count_by_subcategory, get_papers_per_year
 
 log = logging.getLogger(__name__)
 
@@ -28,9 +28,9 @@ def plot_single_category(category: str) -> Path | None:
         log.warning("No rows for category %r - is the database populated?", category)
         return None
 
-    df = df.sort_values("count", ascending=False)
+    df = df.sort_values("papers", ascending=False)
     fig, ax = plt.subplots(figsize=(20, 6))
-    ax.bar(df["sub_category"], df["count"])
+    ax.bar(df["sub_category"], df["papers"])
     ax.set_title(f"Papers per subcategory: {category}")
     ax.set_ylabel("papers")
     ax.tick_params(axis="x", rotation=90)
@@ -51,7 +51,7 @@ def plot_papers_per_year(main_category: str | None = None) -> Path | None:
         return None
 
     fig, ax = plt.subplots(figsize=(12, 5))
-    ax.plot(df["year"], df["count"], marker="o")
+    ax.plot(df["year"], df["papers"], marker="o")
     ax.set_title(f"Submissions per year{f': {main_category}' if main_category else ''}")
     ax.set_xlabel("year")
     ax.set_ylabel("papers")

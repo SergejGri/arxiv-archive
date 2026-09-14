@@ -298,10 +298,6 @@ def get_main_categories():
 @lru_cache(maxsize=1)
 def humanize_categories() -> pd.DataFrame:
     """One row per arXiv category code.
-
-    Cached: this is a static lookup, there is no reason to rebuild it on
-    every call.
-
     canonical_acro collapses arXiv's alias pairs (cs.LG / stat.ML and
     friends). Group on it when counting papers, or cross-listed papers get
     counted once per alias.
